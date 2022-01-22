@@ -16,7 +16,7 @@ def roll_a_die(minimum=1, maximum=100):
     return randint(minimum, maximum)
 
 
-def get_task_calculate_function(task, team):
+def get_task_calculate_function(task: str, team: Team):
     """
     @param task: The task to perform
     @param team: The team performing the task
@@ -32,11 +32,38 @@ def get_task_calculate_function(task, team):
         raise ValueError("Only possible tasks are 'shoot', 'collect' and 'climb'.")
 
 
+def task_to_score(task: str, part: int, autonomous = False):
+    """
+    Returns score granted for successfully performing a stated task.
+    @param task: Task performed
+    @param part: Part of the game element the task was performed upon. For climbing 1-4, for shooting 1-2 (1 is lower HUB).
+    @param autonomous: Was the task performed during autonomous round.
+    @return: Score granted for performing the task
+    """
+
+    if task == "shoot" and part == 1:
+        return 1 * (int(autonomous) + 1)
+    elif task == "shoot" and part == 2:
+        return 2 * (int(autonomous) + 1)
+    elif task == "climb" and part == 1:
+        return 4
+    elif task == "climb" and part == 2:
+        return 6
+    elif task == "climb" and part == 3:
+        return 10
+    elif task == "climb" and part == 4:
+        return 15
+    else:
+        raise ValueError("Wrong parameters. Allowed parameters are task = shoot with part = 1/2 and task = climb with part = 1/2/3/4.")
+
+
 def play_turn(team):
     possible_tasks = ["shoot", "climb", "collect"]
 
     while True:
         task = input(str(team) + ", You may shoot, climb or collect.\nWhat task do you want to perform? ")
+        if task == "shoot" or task == "climb":
+            part = int(input(f"To what part do you want to {task}? 1 for lower HUB, 1-4 for RUNGs."))
         die_result = roll_a_die()
 
         try:
@@ -45,6 +72,7 @@ def play_turn(team):
 
             if success:
                 print("Well done! You completed the task successfully.")
+                task_to_score(task, )
         except ValueError:
             pass
 
