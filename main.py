@@ -1,4 +1,3 @@
-from math import ceil
 from random import randint
 from alliance import Alliance
 from team import Team
@@ -11,7 +10,7 @@ def roll_a_die(minimum=1, maximum=100):
 
     @param minimum: Minimum return value
     @param maximum: Maximum return value
-    @return: Random value between @minimum and @maximum
+    @return: Random value between @minimum and @maximum inclusive
     """
     return randint(minimum, maximum)
 
@@ -35,6 +34,7 @@ def get_task_calculate_function(task: str, team: Team):
 def task_to_score(task: str, part: int, autonomous = False):
     """
     Returns score granted for successfully performing a stated task.
+
     @param task: Task performed
     @param part: Part of the game element the task was performed upon. For climbing 1-4, for shooting 1-2 (1 is lower HUB).
     @param autonomous: Was the task performed during autonomous round.
@@ -53,27 +53,42 @@ def task_to_score(task: str, part: int, autonomous = False):
         return 10
     elif task == "climb" and part == 4:
         return 15
+    elif task == "collect":
+        return 0
     else:
-        raise ValueError("Wrong parameters. Allowed parameters are task = shoot with part = 1/2 and task = climb with part = 1/2/3/4.")
+        # Not a valid input
+        raise ValueError("Wrong parameters. Allowed parameters are task = shoot with part = 1/2,\
+         task = climb with part = 1/2/3/4 and task = collect.")
 
 
-def play_turn(team):
+def play_turn(team, autonomous=False):
     possible_tasks = ["shoot", "climb", "collect"]
 
+    # Ask the team what it wants to do
     while True:
         task = input(str(team) + ", You may shoot, climb or collect.\nWhat task do you want to perform? ")
+        part = 0
         if task == "shoot" or task == "climb":
-            part = int(input(f"To what part do you want to {task}? 1 for lower HUB, 1-4 for RUNGs."))
+            part = int(input(f"To what part do you want to {task}? 1 for lower HUB, 1-4 for RUNGs. "))
+
         die_result = roll_a_die()
+        protection_score = roll_a_die()
 
         try:
-            success = die_result >= get_task_calculate_function(task, team)
-            print(f"You rolled {die_result}.")
+            try:
+                success = die_result >= get_task_calculate_function(task, team)(protection_score, part)
+                print(f"You rolled {die_result}.")
 
-            if success:
-                print("Well done! You completed the task successfully.")
-                task_to_score(task, )
+                if success:
+                    print("Well done! You completed the task successfully.")
+                    score = task_to_score(task, part, autonomous)
+                    team.shoot(score)
+                    print(f"You got {score} score.")
+                    return
+            except ValueError:
+
         except ValueError:
+            print("Incorrect input!")
             pass
 
 
@@ -100,4 +115,7 @@ teams = [Team(254, "The Cheesy Poofs", 10, Robot(10, 10, 10)),
 blue_alliance = Alliance(teams[0], teams[1], teams[2])
 red_alliance = Alliance(teams[3], teams[4], teams[5])
 
-print(blue_alliance)
+for team in blue_alliance.get_teams():
+    play_turn(team)
+
+print(blue_alliance.score)
